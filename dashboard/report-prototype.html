@@ -1,0 +1,241 @@
+<title>Supply Chain Analytics Report</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: Power BI-style report canvas, page tabs, KPI cards row, 2-column visual grid */
+:root{
+  --canvas:#eef0f3; --tile:#ffffff; --fg:#1f2630; --muted:#5f6b7a; --line:#dfe3e8;
+  --s1:#1f6fb2; --s2:#9aa7b6; --s3:#e0812f; --good:#2e7d4f; --bad:#c23b3b; --amber:#b7791f; --bar:#232c38;
+  --ui:"Segoe UI", "Selawik", system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --canvas:#14181d; --tile:#1d232b; --fg:#e6eaef; --muted:#9aa5b2; --line:#2e3742;
+  --s1:#5aa7e6; --s2:#66717e; --s3:#f0a05a; --good:#5cc489; --bad:#ef6f6f; --amber:#e5b04f; --bar:#0d1014; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --canvas:#14181d; --tile:#1d232b; --fg:#e6eaef; --muted:#9aa5b2; --line:#2e3742;
+  --s1:#5aa7e6; --s2:#66717e; --s3:#f0a05a; --good:#5cc489; --bad:#ef6f6f; --amber:#e5b04f; --bar:#0d1014; color-scheme:dark}
+body{background:var(--canvas);color:var(--fg);font-family:var(--ui);font-size:14px}
+.top{background:var(--bar);color:#e9edf2;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline;justify-content:space-between}
+.top b{font-size:15px;font-weight:600}
+.top span{font-size:12px;color:#aab4c0}
+[hidden]{display:none!important}
+.page{display:grid;gap:12px}
+.wrap{max-width:1200px;margin:0 auto;padding-block:14px 30px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:12px}
+.tabs{display:flex;gap:2px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.tabs button{font:600 13px var(--ui);color:var(--muted);background:transparent;border:0;border-bottom:3px solid transparent;padding:8px 14px;cursor:pointer}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--s1)}
+.tabs button:focus-visible{outline:2px solid var(--s1)}
+.slicers{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--muted)}
+.slicers span{border:1px solid var(--line);background:var(--tile);padding:4px 10px;border-radius:2px;color:var(--fg)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.card{background:var(--tile);border:1px solid var(--line);padding:12px 14px;display:grid;gap:2px;align-content:start}
+.card .v{font-size:28px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.2}
+.card .l{font-size:12px;color:var(--muted)}
+.card .d{font-size:12px;font-weight:600}
+.up{color:var(--good)}.down{color:var(--bad)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:12px}
+.vis{background:var(--tile);border:1px solid var(--line);padding:12px 14px;display:grid;gap:8px;min-width:0;align-content:start}
+.vis h3{margin:0;font-size:13px;font-weight:600}
+.vis .sub{font-size:11px;color:var(--muted);margin-top:-6px}
+.vis.wide{grid-column:1/-1}
+svg{display:block;width:100%;height:auto;overflow:visible}
+svg text{fill:var(--muted);font:11px var(--ui)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:3px;vertical-align:middle;margin-right:5px}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:12px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--muted);font-weight:600}
+td.num,th.num{text-align:right}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11px;font-weight:600;color:var(--tile)}
+.pill.r{background:var(--bad)}.pill.a{background:var(--amber)}.pill.g{background:var(--good)}
+.foot{font-size:11px;color:var(--muted)}
+.tip{position:fixed;pointer-events:none;background:var(--bar);color:#fff;font-size:12px;padding:6px 8px;border-radius:3px;z-index:20}
+</style>
+
+<div class="top"><b>FMCG Supply Chain Analytics · Portfolio prototype</b><span>Simulated data · 40 SKUs · 4 DCs · 60,000 orders · built to mirror the Power BI report</span></div>
+<div class="wrap">
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tab-plan" aria-selected="true" data-page="plan">Planner cockpit</button>
+    <button role="tab" id="tab-acc" aria-selected="false" data-page="acc">Forecast accuracy</button>
+    <button role="tab" id="tab-otif" aria-selected="false" data-page="otif">OTIF scorecard</button>
+    <button role="tab" id="tab-it" aria-selected="false" data-page="it">IT incident impact</button>
+  </div>
+
+  <!-- PAGE: planner -->
+  <section data-pane="plan" class="page">
+    <div class="slicers">Slicers: <span>Region: UK</span><span>Horizon: 2 weeks</span><span>Category: All</span></div>
+    <div class="kpis">
+      <div class="card"><div class="l">Forecast WAPE (LightGBM)</div><div class="v" id="k-wape"></div><div class="d up" id="k-wape-d"></div></div>
+      <div class="card"><div class="l">Stockout weeks caught 2 wks ahead</div><div class="v" id="k-recall"></div><div class="d" id="k-prec"></div></div>
+      <div class="card"><div class="l">Share of SKU-DC weeks out of stock</div><div class="v" id="k-so"></div><div class="d" style="color:var(--muted)">Full 3-year history</div></div>
+      <div class="card"><div class="l">Forecast bias, last 26 weeks</div><div class="v" id="k-bias"></div><div class="d" style="color:var(--muted)">Positive = over-forecast</div></div>
+    </div>
+    <div class="grid">
+      <div class="vis wide"><h3>Total demand: history, forecast and seasonal-naive baseline</h3><div class="sub">Units per week, all SKUs and DCs. Shaded area is the 26-week backtest.</div>
+        <div class="legend"><span><i style="background:var(--s2)"></i>Actual (unconstrained)</span><span><i style="background:var(--s1)"></i>LightGBM forecast</span><span><i style="background:var(--s3)"></i>Same week last year</span></div>
+        <div id="c-demand"></div></div>
+      <div class="vis"><h3>At-risk SKUs this week</h3><div class="sub">Lowest weeks of cover against next forecast</div><div class="tbl" id="t-risk"></div></div>
+      <div class="vis"><h3>Stockout rate by distribution centre</h3><div class="sub">Share of SKU-weeks with unmet demand</div><div id="c-dc"></div></div>
+    </div>
+  </section>
+
+  <!-- PAGE: accuracy -->
+  <section data-pane="acc" class="page" hidden>
+    <div class="slicers">Slicers: <span>Backtest: last 26 weeks</span><span>Level: SKU × DC × week</span></div>
+    <div class="grid">
+      <div class="vis"><h3>WAPE by category</h3><div class="sub">Lower is better. Baseline WAPE shown as a dashed line.</div><div id="c-catw"></div></div>
+      <div class="vis"><h3>Average promo uplift by category</h3><div class="sub">Mean weekly demand in promo weeks against non-promo weeks</div><div id="c-uplift"></div></div>
+      <div class="vis wide"><h3>Weekly forecast error in the backtest</h3><div class="sub">Absolute error as a share of actual, LightGBM against baseline</div>
+        <div class="legend"><span><i style="background:var(--s1)"></i>LightGBM</span><span><i style="background:var(--s3)"></i>Same week last year</span></div>
+        <div id="c-err"></div></div>
+    </div>
+  </section>
+
+  <!-- PAGE: OTIF -->
+  <section data-pane="otif" class="page" hidden>
+    <div class="slicers">Slicers: <span>Period: Jan 2024 – Dec 2025</span><span>Target: 95%</span><span>Plant: All</span></div>
+    <div class="kpis">
+      <div class="card"><div class="l">OTIF</div><div class="v" id="k-otif"></div><div class="d down">vs 95% target</div></div>
+      <div class="card"><div class="l">On time</div><div class="v" id="k-ot"></div></div>
+      <div class="card"><div class="l">In full</div><div class="v" id="k-if"></div></div>
+      <div class="card"><div class="l">Orders missing proof of delivery</div><div class="v" id="k-pod"></div><div class="d" style="color:var(--muted)">Excluded, shown for data quality</div></div>
+    </div>
+    <div class="grid">
+      <div class="vis wide"><h3>Monthly OTIF against target</h3><div class="sub">All customers</div><div id="c-month"></div></div>
+      <div class="vis"><h3>Retailer scorecard</h3><div class="sub">RAG: green ≥ 95%, amber ≥ 85%, red below</div><div class="tbl" id="t-cust"></div></div>
+      <div class="vis"><h3>Why orders failed OTIF</h3><div class="sub">Count of failed orders by cause</div><div id="c-reason"></div></div>
+    </div>
+  </section>
+
+  <!-- PAGE: IT -->
+  <section data-pane="it" class="page" hidden>
+    <div class="slicers">Slicers: <span>Priority: P1, P2</span><span>Apps: SAP SD, EDI Gateway, WMS</span></div>
+    <div class="kpis">
+      <div class="card"><div class="l">Late orders overlapping an open P1/P2 incident</div><div class="v" id="k-link"></div></div>
+      <div class="card"><div class="l">OTIF while a disruptive incident is open</div><div class="v down" id="k-with"></div><div class="d" id="k-without"></div></div>
+      <div class="card"><div class="l">Incidents logged</div><div class="v" id="k-inc"></div><div class="d" style="color:var(--muted)">All priorities, 2 years</div></div>
+    </div>
+    <div class="grid">
+      <div class="vis"><h3>Late orders linked to each application</h3><div class="sub">Where a fix protects the most deliveries</div><div id="c-app"></div></div>
+      <div class="vis"><h3>Median hours to resolve by priority</h3><div class="sub">From the incident log</div><div id="c-mttr"></div></div>
+    </div>
+  </section>
+
+  <p class="foot">All figures come from synthetic data generated by gen_demand_data.py and gen_otif_data.py and computed by analyse.py. They are portfolio results, not Reckitt figures. Brand and retailer names describe the industry setting only.</p>
+</div>
+<div class="tip" id="tip" hidden></div>
+
+<script>
+const D = {"p1": {"wape_naive": 0.1918122137865428, "wape_lgb": 0.13933142732280493, "bias": 0.004137122264165165, "recall": 0.9931365820178449, "precision": 0.5242753623188405, "stockout_rate": 0.09824840764331211, "rows": 25120, "imputed": 573, "weekly": [{"w": "2025-07-07", "a": 308677, "f": 300500, "n": 287766}, {"w": "2025-07-14", "a": 304851, "f": 300034, "n": 270603}, {"w": "2025-07-21", "a": 297557, "f": 294845, "n": 285505}, {"w": "2025-07-28", "a": 298168, "f": 289558, "n": 277252}, {"w": "2025-08-04", "a": 288192, "f": 287561, "n": 266374}, {"w": "2025-08-11", "a": 296887, "f": 280294, "n": 262238}, {"w": "2025-08-18", "a": 287015, "f": 286952, "n": 262766}, {"w": "2025-08-25", "a": 285376, "f": 285403, "n": 259843}, {"w": "2025-09-01", "a": 283422, "f": 281187, "n": 249947}, {"w": "2025-09-08", "a": 274340, "f": 280400, "n": 263137}, {"w": "2025-09-15", "a": 275879, "f": 278772, "n": 250893}, {"w": "2025-09-22", "a": 275092, "f": 265403, "n": 243895}, {"w": "2025-09-29", "a": 280429, "f": 285591, "n": 262057}, {"w": "2025-10-06", "a": 280891, "f": 278054, "n": 276662}, {"w": "2025-10-13", "a": 291665, "f": 294817, "n": 267305}, {"w": "2025-10-20", "a": 286944, "f": 295412, "n": 276897}, {"w": "2025-10-27", "a": 281139, "f": 293055, "n": 281186}, {"w": "2025-11-03", "a": 338999, "f": 359491, "n": 331167}, {"w": "2025-11-10", "a": 342918, "f": 362595, "n": 350844}, {"w": "2025-11-17", "a": 348975, "f": 357373, "n": 347192}, {"w": "2025-11-24", "a": 354643, "f": 352769, "n": 347710}, {"w": "2025-12-01", "a": 371347, "f": 362902, "n": 355184}, {"w": "2025-12-08", "a": 370362, "f": 379642, "n": 363132}, {"w": "2025-12-15", "a": 383792, "f": 380286, "n": 370220}, {"w": "2025-12-22", "a": 384253, "f": 381441, "n": 387411}, {"w": "2025-12-29", "a": 386769, "f": 398083, "n": 382750}], "history": [{"w": "2024-07-08", "a": 287766}, {"w": "2024-07-15", "a": 270603}, {"w": "2024-07-22", "a": 285505}, {"w": "2024-07-29", "a": 277252}, {"w": "2024-08-05", "a": 266374}, {"w": "2024-08-12", "a": 262238}, {"w": "2024-08-19", "a": 262766}, {"w": "2024-08-26", "a": 259843}, {"w": "2024-09-02", "a": 249947}, {"w": "2024-09-09", "a": 263137}, {"w": "2024-09-16", "a": 250893}, {"w": "2024-09-23", "a": 243895}, {"w": "2024-09-30", "a": 262057}, {"w": "2024-10-07", "a": 276662}, {"w": "2024-10-14", "a": 267305}, {"w": "2024-10-21", "a": 276897}, {"w": "2024-10-28", "a": 281186}, {"w": "2024-11-04", "a": 331167}, {"w": "2024-11-11", "a": 350844}, {"w": "2024-11-18", "a": 347192}, {"w": "2024-11-25", "a": 347710}, {"w": "2024-12-02", "a": 355184}, {"w": "2024-12-09", "a": 363132}, {"w": "2024-12-16", "a": 370220}, {"w": "2024-12-23", "a": 387411}, {"w": "2024-12-30", "a": 382750}, {"w": "2025-01-06", "a": 389030}, {"w": "2025-01-13", "a": 406407}, {"w": "2025-01-20", "a": 407351}, {"w": "2025-01-27", "a": 420609}, {"w": "2025-02-03", "a": 427606}, {"w": "2025-02-10", "a": 417075}, {"w": "2025-02-17", "a": 430558}, {"w": "2025-02-24", "a": 373221}, {"w": "2025-03-03", "a": 378421}, {"w": "2025-03-10", "a": 375761}, {"w": "2025-03-17", "a": 364928}, {"w": "2025-03-24", "a": 363553}, {"w": "2025-03-31", "a": 349971}, {"w": "2025-04-07", "a": 362034}, {"w": "2025-04-14", "a": 350973}, {"w": "2025-04-21", "a": 364881}, {"w": "2025-04-28", "a": 354941}, {"w": "2025-05-05", "a": 359488}, {"w": "2025-05-12", "a": 352839}, {"w": "2025-05-19", "a": 352019}, {"w": "2025-05-26", "a": 346319}, {"w": "2025-06-02", "a": 332938}, {"w": "2025-06-09", "a": 337705}, {"w": "2025-06-16", "a": 341185}, {"w": "2025-06-23", "a": 316559}, {"w": "2025-06-30", "a": 317900}], "cat_wape": {"Handwash": 0.131, "Pain Relief": 0.139, "Dishwash": 0.139, "Disinfectant": 0.142, "Surface Cleaner": 0.143}, "stockout_by_dc": {"DC_SCOTLAND": 0.105, "DC_MIDLANDS": 0.103, "DC_NORTH": 0.094, "DC_SOUTH": 0.091}, "promo_uplift": {"Dishwash": 0.303, "Surface Cleaner": 0.301, "Disinfectant": 0.277, "Handwash": 0.261, "Pain Relief": 0.223}, "at_risk": [{"sku": "SKU1000", "dc": "DC_MIDLANDS", "cat": "Disinfectant", "stock": 0, "fc": 4376, "cover": 0.0}, {"sku": "SKU1000", "dc": "DC_SOUTH", "cat": "Disinfectant", "stock": 0, "fc": 2819, "cover": 0.0}, {"sku": "SKU1001", "dc": "DC_SCOTLAND", "cat": "Pain Relief", "stock": 0, "fc": 3117, "cover": 0.0}, {"sku": "SKU1001", "dc": "DC_MIDLANDS", "cat": "Pain Relief", "stock": 0, "fc": 5383, "cover": 0.0}, {"sku": "SKU1001", "dc": "DC_SOUTH", "cat": "Pain Relief", "stock": 0, "fc": 5109, "cover": 0.0}, {"sku": "SKU1002", "dc": "DC_SOUTH", "cat": "Pain Relief", "stock": 0, "fc": 3923, "cover": 0.0}, {"sku": "SKU1007", "dc": "DC_NORTH", "cat": "Pain Relief", "stock": 0, "fc": 4779, "cover": 0.0}, {"sku": "SKU1007", "dc": "DC_SOUTH", "cat": "Pain Relief", "stock": 0, "fc": 3782, "cover": 0.0}]}, "p2": {"otif": 0.8218518518518518, "on_time": 0.8747306397306397, "in_full": 0.9397138047138047, "orders": 60000, "pod_missing": 600, "incidents": 900, "linked_share_of_late": 0.46203467275903776, "otif_with_incident": 0.33784284655300223, "otif_without_incident": 0.8702133175320347, "monthly": [{"m": "2024-01", "v": 0.849}, {"m": "2024-02", "v": 0.7924}, {"m": "2024-03", "v": 0.8535}, {"m": "2024-04", "v": 0.8089}, {"m": "2024-05", "v": 0.8193}, {"m": "2024-06", "v": 0.7712}, {"m": "2024-07", "v": 0.8283}, {"m": "2024-08", "v": 0.8649}, {"m": "2024-09", "v": 0.8026}, {"m": "2024-10", "v": 0.7061}, {"m": "2024-11", "v": 0.8305}, {"m": "2024-12", "v": 0.8597}, {"m": "2025-01", "v": 0.8198}, {"m": "2025-02", "v": 0.8183}, {"m": "2025-03", "v": 0.8113}, {"m": "2025-04", "v": 0.8298}, {"m": "2025-05", "v": 0.8279}, {"m": "2025-06", "v": 0.7998}, {"m": "2025-07", "v": 0.8605}, {"m": "2025-08", "v": 0.8229}, {"m": "2025-09", "v": 0.8454}, {"m": "2025-10", "v": 0.8437}, {"m": "2025-11", "v": 0.8192}, {"m": "2025-12", "v": 0.8418}], "by_customer": {"Ocado": 0.7737, "Amazon": 0.7876, "Tesco": 0.8098, "Asda": 0.8188, "Sainsbury's": 0.8273, "Morrisons": 0.8472, "Superdrug": 0.8477, "Boots": 0.8633}, "app_impact": {"EDI Gateway": 1694, "SAP SD": 1226, "WMS": 518}, "reasons": {"Late, open incident": 3438, "Late, other cause": 4003, "Short shipped only": 3141}, "mttr_hours": {"P1": 2.5, "P2": 8.8, "P3": 28.8, "P4": 50.6}}};
+const $ = id => document.getElementById(id);
+const pct = (x, d = 1) => (x * 100).toFixed(d) + '%';
+const fmt = n => Math.round(n).toLocaleString('en-GB');
+const tip = $('tip');
+function hover(el, text){
+  el.addEventListener('mousemove', e => { tip.hidden = false; tip.textContent = text; tip.style.left = (e.clientX + 12) + 'px'; tip.style.top = (e.clientY + 12) + 'px'; });
+  el.addEventListener('mouseleave', () => tip.hidden = true);
+}
+const NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, parent){ const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+function niceMax(v){ const p = Math.pow(10, Math.floor(Math.log10(v))); return Math.ceil(v / p) * p; }
+
+// horizontal bar chart
+function hbar(target, data, {fmtv = pct, max, color = 'var(--s1)', ref} = {}){
+  const W = 460, rowH = 30, L = 120, R = 50, H = data.length * rowH + 24;
+  const svg = el('svg', {viewBox: `0 0 ${W} ${H}`, role: 'img'});
+  const mx = max || Math.max(...data.map(d => d[1])) * 1.1;
+  const x = v => L + (W - L - R) * Math.max(0, v) / mx;
+  data.forEach(([k, v], i) => {
+    const y = i * rowH + 6;
+    el('text', {x: L - 8, y: y + 15, 'text-anchor': 'end'}, svg).textContent = k;
+    const r = el('rect', {x: L, y, width: Math.max(1, x(v) - L), height: 18, fill: color, rx: 1}, svg);
+    hover(r, `${k}: ${fmtv(v)}`);
+    el('text', {x: x(v) + 6, y: y + 14}, svg).textContent = fmtv(v);
+  });
+  if (ref != null){ el('line', {x1: x(ref), x2: x(ref), y1: 0, y2: H - 20, stroke: 'var(--s3)', 'stroke-dasharray': '4 3', 'stroke-width': 1.5}, svg);
+    el('text', {x: x(ref), y: H - 6, 'text-anchor': 'middle'}, svg).textContent = 'Baseline ' + fmtv(ref); }
+  $(target).appendChild(svg);
+}
+
+// multi-line chart
+function lines(target, labels, series, {yfmt = fmt, ymin = 0, ymax, shadeFrom, target: tgt, tickEvery = 8} = {}){
+  const W = 900, H = 260, L = 56, R = 16, T = 10, B = 28;
+  const svg = el('svg', {viewBox: `0 0 ${W} ${H}`, role: 'img'});
+  const all = series.flatMap(s => s.data.filter(v => v != null));
+  const top = ymax ?? niceMax(Math.max(...all));
+  const x = i => L + (W - L - R) * i / (labels.length - 1);
+  const y = v => T + (H - T - B) * (1 - (v - ymin) / (top - ymin));
+  if (shadeFrom != null) el('rect', {x: x(shadeFrom), y: T, width: x(labels.length - 1) - x(shadeFrom), height: H - T - B, fill: 'var(--canvas)'}, svg);
+  for (let k = 0; k <= 4; k++){ const v = ymin + (top - ymin) * k / 4;
+    el('line', {x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: 'var(--line)'}, svg);
+    el('text', {x: L - 6, y: y(v) + 4, 'text-anchor': 'end'}, svg).textContent = yfmt(v); }
+  labels.forEach((l, i) => { if (i % tickEvery === 0) el('text', {x: x(i), y: H - 8, 'text-anchor': 'middle'}, svg).textContent = l; });
+  if (tgt != null){ el('line', {x1: L, x2: W - R, y1: y(tgt), y2: y(tgt), stroke: 'var(--good)', 'stroke-dasharray': '5 4', 'stroke-width': 1.5}, svg);
+    el('text', {x: W - R, y: y(tgt) - 6, 'text-anchor': 'end'}, svg).textContent = 'Target ' + yfmt(tgt); }
+  series.forEach(s => {
+    let d = ''; s.data.forEach((v, i) => { if (v == null) return; d += (d ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1); });
+    el('path', {d, fill: 'none', stroke: s.color, 'stroke-width': s.w || 2, 'stroke-linejoin': 'round'}, svg);
+    s.data.forEach((v, i) => { if (v == null) return; const c = el('circle', {cx: x(i), cy: y(v), r: 6, fill: 'transparent'}, svg); hover(c, `${labels[i]} · ${s.name}: ${yfmt(v)}`); });
+    const li = s.data.length - 1; if (s.data[li] != null) el('circle', {cx: x(li), cy: y(s.data[li]), r: 3.5, fill: s.color}, svg);
+  });
+  $(target).appendChild(svg);
+}
+
+// ---- Page 1
+const p1 = D.p1, p2 = D.p2;
+$('k-wape').textContent = pct(p1.wape_lgb);
+$('k-wape-d').textContent = '▼ from ' + pct(p1.wape_naive) + ' baseline';
+$('k-recall').textContent = pct(p1.recall, 0);
+$('k-prec').textContent = pct(p1.precision, 0) + ' of flags were real stockouts';
+$('k-prec').style.color = 'var(--muted)';
+$('k-so').textContent = pct(p1.stockout_rate);
+$('k-bias').textContent = (p1.bias >= 0 ? '+' : '') + pct(p1.bias);
+const hist = p1.history, wk = p1.weekly;
+const labels = hist.map(h => h.w.slice(2, 7)).concat(wk.map(w => w.w.slice(2, 7)));
+lines('c-demand', labels, [
+  {name: 'Actual', color: 'var(--s2)', data: hist.map(h => h.a).concat(wk.map(w => w.a)), w: 2.5},
+  {name: 'Baseline', color: 'var(--s3)', data: hist.map(() => null).concat(wk.map(w => w.n)), w: 1.5},
+  {name: 'LightGBM', color: 'var(--s1)', data: hist.map(() => null).concat(wk.map(w => w.f))},
+], {shadeFrom: hist.length, tickEvery: 9});
+$('t-risk').innerHTML = '<table><thead><tr><th>SKU</th><th>DC</th><th>Category</th><th class="num">Stock</th><th class="num">Forecast</th><th class="num">Cover (wks)</th><th>Status</th></tr></thead><tbody>' +
+  p1.at_risk.map(r => `<tr><td>${r.sku}</td><td>${r.dc}</td><td>${r.cat}</td><td class="num">${fmt(r.stock)}</td><td class="num">${fmt(r.fc)}</td><td class="num">${r.cover.toFixed(2)}</td><td><span class="pill ${r.cover < 0.4 ? 'r' : r.cover < 1.5 ? 'a' : 'g'}">${r.cover < 0.4 ? 'Stockout' : r.cover < 1.5 ? 'At risk' : 'OK'}</span></td></tr>`).join('') + '</tbody></table>';
+hbar('c-dc', Object.entries(p1.stockout_by_dc), {max: 0.15});
+
+// ---- Page 2
+hbar('c-catw', Object.entries(p1.cat_wape), {max: 0.25, ref: p1.wape_naive});
+hbar('c-uplift', Object.entries(p1.promo_uplift), {max: 0.4, color: 'var(--s3)', fmtv: v => '+' + pct(v, 0)});
+lines('c-err', wk.map(w => w.w.slice(2)), [
+  {name: 'Baseline', color: 'var(--s3)', data: wk.map(w => Math.abs(w.n - w.a) / w.a)},
+  {name: 'LightGBM', color: 'var(--s1)', data: wk.map(w => Math.abs(w.f - w.a) / w.a)},
+], {yfmt: v => pct(v, 0), tickEvery: 4});
+
+// ---- Page 3
+$('k-otif').textContent = pct(p2.otif);
+$('k-ot').textContent = pct(p2.on_time);
+$('k-if').textContent = pct(p2.in_full);
+$('k-pod').textContent = fmt(p2.pod_missing);
+lines('c-month', p2.monthly.map(m => m.m.replace('-', '/')), [{name: 'OTIF', color: 'var(--s1)', data: p2.monthly.map(m => m.v)}],
+  {yfmt: v => pct(v, 0), ymin: 0.6, ymax: 1, target: 0.95, tickEvery: 3});
+$('t-cust').innerHTML = '<table><thead><tr><th>Retailer</th><th class="num">OTIF</th><th class="num">Gap to 95%</th><th>RAG</th></tr></thead><tbody>' +
+  Object.entries(p2.by_customer).map(([c, v]) => `<tr><td>${c}</td><td class="num">${pct(v)}</td><td class="num">${((v - 0.95) * 100).toFixed(1)} pts</td><td><span class="pill ${v >= .95 ? 'g' : v >= .85 ? 'a' : 'r'}">${v >= .95 ? 'Green' : v >= .85 ? 'Amber' : 'Red'}</span></td></tr>`).join('') + '</tbody></table>';
+hbar('c-reason', Object.entries(p2.reasons), {fmtv: fmt, color: 'var(--bad)'});
+
+// ---- Page 4
+$('k-link').textContent = pct(p2.linked_share_of_late, 0);
+$('k-with').textContent = pct(p2.otif_with_incident, 0);
+$('k-without').textContent = 'vs ' + pct(p2.otif_without_incident, 0) + ' with no incident open';
+$('k-without').style.color = 'var(--muted)';
+$('k-inc').textContent = fmt(p2.incidents);
+hbar('c-app', Object.entries(p2.app_impact), {fmtv: fmt, color: 'var(--s1)'});
+hbar('c-mttr', Object.entries(p2.mttr_hours), {fmtv: v => v + ' h', color: 'var(--s2)'});
+
+// ---- tabs
+const tabs = document.querySelectorAll('.tabs button');
+function show(page){
+  tabs.forEach(t => t.setAttribute('aria-selected', t.dataset.page === page));
+  document.querySelectorAll('[data-pane]').forEach(p => p.hidden = p.dataset.pane !== page);
+}
+tabs.forEach(t => t.addEventListener('click', () => { show(t.dataset.page); history.replaceState(null, '', '#' + t.dataset.page); }));
+const h = location.hash.slice(1); if (['plan', 'acc', 'otif', 'it'].includes(h)) show(h);
+addEventListener('hashchange', () => { const k = location.hash.slice(1); if (['plan', 'acc', 'otif', 'it'].includes(k)) show(k); });
+</script>
